@@ -44,7 +44,7 @@ $virtualNetwork.AddressSpace
 $virtualNetwork.Subnets
 
 ###Create virtual machine ###
-##SQL Servire VM##
+##SQL Server VM##
 # Deploy to a resource group with ARM template with inline parameters 
 $arrayParam = @{ "alias" = "neochen"; "adminPassword" = "demo@pass123"}
 New-AzResourceGroupDeployment -ResourceGroupName $rsgName -TemplateFile azuredeploy.sql.json -TemplateParameterObject  $arrayParam
@@ -52,7 +52,7 @@ New-AzResourceGroupDeployment -ResourceGroupName $rsgName -TemplateFile azuredep
 ##Web Server VM##
 
 #Create a storage account, Standard_LRS :Locally-redundant storage
-New-AzStorageAccount -ResourceGroupName $rsgName -Name shouhchendsc -Location centralus -SkuName Standard_LRS
+New-AzStorageAccount -ResourceGroupName $rsgName -Name shouhchendsc -Location $loc -SkuName Standard_LRS
 $storageAccount = Get-AzStorageAccount | Select-Object -Last 1
 
 #Create a container for blob files
@@ -72,4 +72,8 @@ $SASToken = New-AzStorageAccountSASToken -Service Blob -ResourceType Service,Con
 #Deploy an Azure Resource Manager Template
 $arrayParam = @{ "alias" = "neochen"; "adminPassword" = "demo@pass123" ; "dscModulesUrl"= "https://shouhchendsc.blob.core.windows.net/dsc/web-dsc-config.zip"+$SASToken}
 New-AzResourceGroupDeployment -ResourceGroupName $rsgName -TemplateFile azuredeploy.web.json -TemplateParameterObject  $arrayParam
+
+
+### Create a key-vault resource ###
+New-AzKeyVault -VaultName "shuoh-contoso-keyvault" -ResourceGroupName $rsgName -Location $loc -EnabledForDeployment
 

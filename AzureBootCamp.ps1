@@ -17,7 +17,10 @@ Get-AzSubscription -SubscriptionName 'Visual Studio Enterprise Subscription'
 Select-AzSubscription -SubscriptionId '0ea55d77-1224-4a86-a888-913c1ed0fb83'
 
 #Get the resource grous
- Get-AzResourceGroup
+Get-AzResourceGroup
+
+#Delete Resource Group
+Remove-AzResourceGroup -Name $resourceGroup
 
 #Get AzContext
 Get-AzContext
@@ -76,4 +79,30 @@ New-AzResourceGroupDeployment -ResourceGroupName $rsgName -TemplateFile azuredep
 
 ### Create a key-vault resource ###
 New-AzKeyVault -VaultName "shuoh-contoso-keyvault" -ResourceGroupName $rsgName -Location $loc -EnabledForDeployment
+
+#Create a secure string variable of your chosen secret.
+[SecureString]$secretvalue = Read-Host -Prompt "Enter secret" -AsSecureString
+
+
+#Set the secret in Key Vault by running this command
+$secret = Set-AzKeyVaultSecret -VaultName "shuoh-contoso-keyvault" -Name "shuohTest" -SecretValue $secretvalue
+
+#List all of the secrets in one key vault
+Get-AzKeyVaultSecret -VaultName "shuoh-contoso-keyvault"
+
+#Find and print out the secrete
+$secret = Get-AzKeyVaultSecret -VaultName "shuoh-contoso-keyvault" -Name "shuohTest"
+Write-Host "Secret Value is: " $secret.SecretValueText
+
+#Create a certificate policy
+$policy = New-AzKeyVaultCertificatePolicy -SubjectName "CN=shuohTest" -IssuerName Self -ValidityInMonths 12
+
+#Create a certificate key valut using the police just created
+Add-AzKeyVaultCertificate -VaultName "shuoh-contoso-keyvault" -Name "shuohTestCertificate" -CertificatePolicy $policy
+
+#Check the status of the Certificate-creation
+Get-AzKeyVaultCertificateOperation -VaultName "shuoh-contoso-keyvault" -Name "shuohTestCertificate" 
+
+#Retrieve the public key (Thumber Pinrt) of the given certificate
+Get-AzKeyVaultCertificate -VaultName "shuoh-contoso-keyvault" -Name "shuohTestCertificate"
 

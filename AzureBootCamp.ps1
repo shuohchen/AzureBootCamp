@@ -106,3 +106,34 @@ Get-AzKeyVaultCertificateOperation -VaultName "shuoh-contoso-keyvault" -Name "sh
 #Retrieve the public key (Thumber Pinrt) of the given certificate
 Get-AzKeyVaultCertificate -VaultName "shuoh-contoso-keyvault" -Name "shuohTestCertificate"
 
+###Create SQL Server ###
+az sql server create --name "<alias>-westeurope-sql" --resource-group "<alias>-rg" --location "westeurope" --admin-user "demouser" --admin-password "demo@pass123"
+$srvrName = "shuoh-westeurope-sql"
+New-AzSqlServer -ResourceGroupName $rsgName -Location $loc -ServerName $srvrName -ServerVersion "12.0" -SqlAdministratorCredentials (Get-Credential)
+
+
+#Configure the Azure SQL server firewall to allow Azure service and resources to access the server
+New-AzSqlServerFirewallRule -ResourceGroupName $rsgName -ServerName $srvrName -FirewallRuleName "Allow Azure services" -StartIpAddress "0.0.0.0" -EndIpAddress "0.0.0.0"
+
+#Create a database on the Azure SQL server
+New-AzSqlDatabase -ResourceGroupName $rsgName -ServerName $srvrName -DatabaseName "ContosoAds" -Edition "Basic"
+
+#Create a new storage account
+New-AzStorageAccount -ResourceGroupName $rsgName -Name shuohstorage -Location $loc -SkuName Standard_LRS -AccessTier "Hot" -Kind "StorageV2"
+
+###Create Web Apps (PaaS) ###
+#create the zip package of the given Web application
+Compress-Archive -Path .\ContosoAds.Web\* -DestinationPath ContosoAds.Web.zip
+#URL for the storage account used to put the zip package of the web app for following installation
+#http://shuohchen-webapp.scm.azurewebsites.net/ZipDeployUI/ontosoAds.Web.zip
+
+#Or Deploy Web App zip package via Cmdlet
+az webapp deployment source config-zip --resource-group "<alias>-rg" --name "<alias>-webapp" --src "ContosoAds.Web.zip"
+Publish-AzWebApp -ResourceGroupName $rsgName -Name "shuohchen-webapp" -ArchivePath "https://shuohchen-webapp.scm.azurewebsites.net/ZipDeployUI/"
+
+###Solve the issue "The subscription is not registered to use namespace 'microsoft.insight" ###
+#For PowerShell, use Get-AzResourceProvider to see your registration status
+Get-AzResourceProvider -ListAvailable | Where-Object {($_.ProviderNamespace -like 'microsoft.insights')}
+
+#To register a provider, use Register-AzResourceProvider and provide the name of the resource provider you wish to register
+Register-AzResourceProvider -ProviderNamespace microsoft.insights

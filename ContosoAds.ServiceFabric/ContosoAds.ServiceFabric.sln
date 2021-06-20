@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31402.337
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "ContosoAds.ServiceFabric", "ContosoAds.ServiceFabric\ContosoAds.ServiceFabric.sfproj", "{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}.Debug|x64.ActiveCfg = Debug|x64
+		{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}.Debug|x64.Build.0 = Debug|x64
+		{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}.Debug|x64.Deploy.0 = Debug|x64
+		{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}.Release|x64.ActiveCfg = Release|x64
+		{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}.Release|x64.Build.0 = Release|x64
+		{AEDF50D5-D4AE-407F-8BBA-8EA61EFD7580}.Release|x64.Deploy.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3ACD08B3-0BAC-46EE-9662-6349D951017B}
+	EndGlobalSection
+EndGlobal

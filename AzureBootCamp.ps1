@@ -137,3 +137,11 @@ Get-AzResourceProvider -ListAvailable | Where-Object {($_.ProviderNamespace -lik
 
 #To register a provider, use Register-AzResourceProvider and provide the name of the resource provider you wish to register
 Register-AzResourceProvider -ProviderNamespace microsoft.insights
+
+#Open the given file in its default editor
+start .\RolloutSpec.json
+
+#Browse to C:\Ev2PSClient in file explorer, and then double-click the AzureServiceDeployClient shortcut. This will open a PowerShell console and load the ExpressV2 module
+#Initiate a new Azure Service Rollout:
+New-AzureServiceRollout -ServiceGroupRoot "C:\Repos\EngSys\AzureBootcampContosoAds\ExpressV2\ServiceGroupRoot" -RolloutSpec "RolloutSpec.json" -RolloutInfra Prod -WaitToComplete
+

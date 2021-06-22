@@ -1,0 +1,167 @@
+//Reference : https://dev.azure.com/msazure/AzureWiki/_wiki/wikis/AzureWiki.wiki/30765/CADDAILY_LENS
+//CAD table contains hourly heartbeat data. CADDAILY contains daily heartbeat data
+//AvailabilityState column can have "Up" and "Down" values, where "Up" means the VM ia currently running, and "Down" means that the VM is not running (for whatever reason).
+//NodeId is an identifier for the host node on which a VM resides.
+//ContainerId is a unique identifier for a VM running on a node.
+
+//returns the number of rows in the results
+CADDAILY | count ;
+
+//take: show me n rows
+CADDAILY | take 5;
+
+//project: select a subset of columns
+CADDAILY 
+ 	| take 5
+ 	| project StartTime, EndTime, NodeId, ContainerId, AvailabilityState;
+//where: filtering by a Boolean expression
+CADDAILY 
+ 	| where StartTime >= ago(2d) and AvailabilityState == "Down" and Usage_Region == "useast"
+ 	| take 5
+ 	| project StartTime, EndTime, NodeId, ContainerId;
+//Produces a table with the distinct combination of the provided columns of the input table.
+CADDAILY | distinct NodeId | count; 
+
+//top: sort and take
+CADDAILY | where NodeId == "ecd6a769-7f52-4c3c-88aa-92030d6434f8" and ContainerId == "5ccfe2de-6e8b-45ab-b194-75c1159886ed"
+| top 5 by StartTime asc;
+
+//extend: compute derived columns
+CADDAILY 
+ 	| where StartTime >= ago(2d) and AvailabilityState == "Down" and Usage_Region == "frances"
+ 	| top 5 by DurationInMin desc
+ 	| extend DurationInHours = EndTime - StartTime
+ 	| project StartTime, EndTime, DurationInHours, DurationInMin, NodeId, ContainerId;
+
+//summarize: aggregate groups of rows
+CADDAILY 
+ 	| where StartTime >= ago(2d) and AvailabilityState == "Down"
+ 	| summarize DowntimesCount = count() by Usage_Region 
+ 	| sort by DowntimesCount desc;
+ 	
+CADDAILY 
+ 	| where StartTime >= ago(2d) and AvailabilityState == "Down"
+ 	| summarize DowntimesCount = count(), dcount(LastKnownSubscriptionId) by Usage_Region
+ 	| top 5 by DowntimesCount;
+ 
+//bin: Summarize by scalar values
+CADDAILY 
+    | where StartTime >= ago(5d) and StartTime < ago(1d) and AvailabilityState == "Down"
+    | summarize DownVmsCount = count() by bin(StartTime, 1d);
+
+//render: display a chart or table
+ CADDAILY 
+    | where StartTime >= ago(5d)
+    | summarize DowntimesCount=count(), mid = avg(DurationInMin) by Usage_Region         
+    | sort by mid
+    | where DowntimesCount > 1000000
+    | project Usage_Region, DowntimesCount
+    | render columnchart ;
+
+//join: combine two data sets
+CADDAILY
+    | where StartTime >= ago(5d)
+    | where Hardware_Manufacturer == "Lenovo"
+    | join (
+        CADDAILY 
+        | where StartTime >= ago(5d)
+        | where Hardware_Manufacturer == "ZT"
+    ) on Usage_Region  
+    | distinct Usage_Region;
+    
+//let: assign a result to a variable
+let LenovoHardware = 
+    CADDAILY
+    | where StartTime >= ago(5d)
+    | where Hardware_Manufacturer == "Lenovo";
+let ZTHardware = 
+    CADDAILY
+    | where StartTime >= ago(5d)
+    | where Hardware_Manufacturer == "ZT";
+LenovoHardware 
+    | join (ZTHardware) on Usage_Region
+    | distinct Usage_Region;
+  
+//case: Evaluates a list of predicates and returns the first result expression whose predicate is satisfied or the final else expression
+CADDAILY
+    | where StartTime >= ago(5d)
+    | summarize ContainerCount = dcount(ContainerId) by Usage_Region
+    | extend region_size = case (
+        ContainerCount > 1000000, "large",
+        ContainerCount > 500000, "medium",
+        "small"
+    )
+    | sort by ContainerCount desc;
+ 
+//serialize: Makes the row set serialized to allow activating on it functions that can be performed on serialized data only, e.g. row_number()
+// example of fail case
+CADDAILY
+    | where StartTime >= ago(5d)
+    | summarize count() by Usage_Region
+    | extend row_number = row_number();
+// example of success case 
+CADDAILY
+    | where StartTime >= ago(5d)
+    | summarize count() by Usage_Region
+    | serialize 
+    | extend row_number = row_number();
+//The row set is also considered as serialized if it's a result of: sort / top / range operators, optionally followed by project / project-away / extend / where / parse / mvexpand / take operators.
+CADDAILY
+    | where StartTime >= ago(5d)
+    | summarize count() by Usage_Region
+    | sort by Usage_Region asc
+    | extend row_number = row_number();
+//prev: For the serialized row set, returns a value of a specified column from the earlier row according to the offset
+CADDAILY
+    | where StartTime >= startofmonth(ago(120d))
+    | where Usage_Region == "usnorth" and AvailabilityState == "Down"
+    | summarize count() by startofmonth(StartTime)        
+    | sort by Column1 desc 
+    | extend monthlyDelta = count_ - prev(count_);
+    
+CADDAILY
+    | where StartTime >= startofmonth(ago(120d))
+    | where Usage_Region == "usnorth" and AvailabilityState == "Down"
+    | summarize count() by startofmonth(StartTime)        
+    | sort by Column1 desc 
+    | extend deltaTwoMonthsAgo = count_ - prev(count_, 2) ;
+ 
+//Practice : 
+//Render a chart to show, for the last day, the number of VMs per hardware manufacturer in the region (show a bar for each Usage_Region 
+//for each Hardware_Manufacturer). Only show regions which have the maximum number of hardware manufacturers present
+let ContainerCNT = CADDAILY 
+    | where PreciseTimeStamp >= startofday(ago(1d))
+    | summarize ContainerCount = dcount(ContainerId) by Usage_Region,Hardware_Manufacturer;    
+let maxHWMCNT = CADDAILY 
+    | where PreciseTimeStamp >= startofday(ago(1d))
+    | summarize HWMCNT = dcount(Hardware_Manufacturer) by Usage_Region
+    | top 1 by HWMCNT desc;
+let HWMCNTByReg = CADDAILY 
+    | where PreciseTimeStamp >= startofday(ago(1d))
+    | summarize HWMCNT = dcount(Hardware_Manufacturer) by Usage_Region;
+ContainerCNT 
+    | join kind=leftouter HWMCNTByReg on Usage_Region    
+    | join kind=inner maxHWMCNT on HWMCNT
+    | project Hardware_Manufacturer, ContainerCount
+    | render columnchart ;
+//Another Solution 
+// find the maximum number of different hardware manufacturers in one region
+let MaxHW =
+    CADDAILY
+    | where PreciseTimeStamp >= startofday(ago(1d))
+    | summarize dcount(Hardware_Manufacturer) by Usage_Region
+    | summarize Count = max(dcount_Hardware_Manufacturer);
+// find all the regions with the maximum number of different hardware manufacturers
+let Regions =
+    CADDAILY
+    | where PreciseTimeStamp >= startofday(ago(1d))
+    | summarize Count = dcount(Hardware_Manufacturer) by Usage_Region
+// this will select only regions where the count of different manufacturers is the same as in MaxHW
+    | join kind=inner (MaxHW) on Count
+    | project-away Count, Count1;
+CADDAILY
+    | where PreciseTimeStamp >= startofday(ago(1d))
+    // only select VMs in regions with the highest number of hardware manufacturers
+    | where Usage_Region in (Regions)
+    | summarize VMCount = dcount(ContainerId) by Usage_Region, Hardware_Manufacturer
+    | render columnchart ;

@@ -24,3 +24,11 @@ rem Reset the file to unstage it
 git reset HEAD src\ContosoAdsWeb\Infrastructure\WebConfiguration.cs
 rem checkout the file to undo the change
 git checkout src\ContosoAdsWeb\Infrastructure\WebConfiguration.cs
+rem The git stash command takes the dirty state of your working directory -- your modified tracked files and staged changes -- and saves it on a stack of unfinished changes that you can reapply at any time. 
+rem Using git stash apply will bring these changes back
+git stash
+rem Build the solution in Release configuration to create a package ready for deployment
+rem This will output the Cloud Service package (cspkg) file and configuration (cscfg) to the directory out\Release-AMD64\ContosoAdsCloudService\app.publish\ in the AzureBootcampContosoAds repo
+build /p:Configuration=Release
+rem copy the required files
+xcopy /y out\Release-AMD64\ContosoAdsCloudService\app.publish\ContosoAdsCloudService.cspkg out\Release-AMD64\ContosoAdsCloudService\app.publish\ContosoAdsCloudService.cspkg

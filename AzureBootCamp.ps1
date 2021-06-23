@@ -1,6 +1,9 @@
 ﻿#Get list of loaded module
 Get-Module
 
+#Get all versions of installed modules
+Get-InstalledModule -Name Az.Kusto -AllVersions | Select Name, Version
+
 #Install required azure commandlet using administrator previleges 
 Install-Module -Name Az -AllowClobber -SkipPublisherCheck
 

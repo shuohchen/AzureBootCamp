@@ -1,0 +1,6 @@
+//.create table TaiwanStockPrice (Security_Code:int,	STOCK_NAME:string,	Trade_Volume:int,	Transaction:int,	Trade_Value:int,	Opening_Price:double,	Highest_Price:double,	Lowest_Price:double,	Closing_Price:double,	Direction:string,	Change:double,	Last_Best_Bid_Price:double,	Last_Best_Bid_Volume:int,	Last_Best_Ask_Price:double,	Last_Best_Ask_Volume:int,	Price_Earning_Ratio:double,	Date:datetime);
+//.ingest into table TaiwanStockPrice h'https://shuohchenstorage.blob.core.windows.net/stockinfo/2020_TWSE_Stock_Info.xlsx' with (ignoreFirstRecord = true )
+TaiwanStockPrice
+| where Security_Code  == 2330
+| project Date, Price_Earning_Ratio
+| render linechart ;

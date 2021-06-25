@@ -3,7 +3,7 @@
 //AvailabilityState column can have "Up" and "Down" values, where "Up" means the VM ia currently running, and "Down" means that the VM is not running (for whatever reason).
 //NodeId is an identifier for the host node on which a VM resides.
 //ContainerId is a unique identifier for a VM running on a node.
-
+database("CAD");
 //returns the number of rows in the results
 CADDAILY | count ;
 
@@ -165,3 +165,9 @@ CADDAILY
     | where Usage_Region in (Regions)
     | summarize VMCount = dcount(ContainerId) by Usage_Region, Hardware_Manufacturer
     | render columnchart ;
+    
+//obfuscation of credential data
+print x = h'https://shuohchenstorage.blob.core.windows.net/stockinfo/2020_TWSE_Stock_Info.xlsx'
+
+//show the recent queries in the past 10 min
+.show queries | where StartedOn  > ago(10m);

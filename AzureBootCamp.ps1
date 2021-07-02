@@ -14,10 +14,10 @@ Import-Module Az
 Connect-AzAccount -TenantId cdf32132-1c15-4d10-9ea8-8b6009630dc6
 
 #List subscription
-Get-AzSubscription -SubscriptionName 'Visual Studio Enterprise Subscription'
+Get-AzSubscription -SubscriptionName 'home_subscription'
 
 #Select one specific subscription
-Select-AzSubscription -SubscriptionId '0ea55d77-1224-4a86-a888-913c1ed0fb83'
+Select-AzSubscription -SubscriptionId '46861af6-3496-44f0-8968-11ce30ae6294'
 
 #Get the resource grous
 Get-AzResourceGroup
@@ -28,10 +28,14 @@ Remove-AzResourceGroup -Name $resourceGroup
 #Get AzContext
 Get-AzContext
 
+#Get Tenant ID 
+Connect-AzAccount
+Get-AzTenant
+
 ###Create a Virtual Network ###
 #Check that the resource group exists, if not create it.
-$rsgName = "shouhchen-rg"
-$loc = "Central Us"
+$rsgName = "pathomida-rg"
+$loc = "Japan West"
 Get-AzResourceGroup -Name $rsgName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if($notPresent)
 {
